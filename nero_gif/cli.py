@@ -12,8 +12,20 @@ from .paths import find_ffmpeg
 from .presets import MB, PRESETS, social_gif
 
 
+for _stream in (sys.stdout, sys.stderr):
+    # Windows consoles/CI often use cp1252; never crash on labels like "\u2264".
+    try:
+        if _stream is not None:
+            _stream.reconfigure(errors="replace")  # type: ignore[attr-defined]
+    except Exception:
+        pass
+
+
 def _log(msg: str) -> None:
-    print(msg, flush=True)
+    try:
+        print(msg, flush=True)
+    except (UnicodeEncodeError, ValueError, OSError, AttributeError):
+        pass
 
 
 def cmd_status(_: argparse.Namespace) -> int:
