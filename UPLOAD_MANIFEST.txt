@@ -1,3 +1,4 @@
+# (v0.1.0 initial-upload manifest. For the 0.2.0 update see UPLOAD_V020.txt.)
 # UPLOAD_MANIFEST — create NEW public repo nerosaa/nero-gif-desktop
 # Repo does NOT exist until the browser uploader creates it. Do not claim it is live.
 #
@@ -13,7 +14,7 @@
 # 5) Download artifact NERO-Tools-GIF-Converter-windows-x64 from the successful run.
 #    Inside: NERO-Tools-GIF-Converter-windows-x64.zip
 #
-# NEVER upload: license.key, any file containing a real NERO_LICENSE_SECRET,
+# NEVER upload: license.key, *.key, the Ed25519 private key (~/.nero-secrets), minted keys,
 # real NERO1 keys, tests/out/*.gif, dist/, build/, __pycache__/
 #
 # Do NOT publish Getly until the Windows zip smoke-passes on a real Windows PC.

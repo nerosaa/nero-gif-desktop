@@ -12,7 +12,9 @@ Pro unlock (USD 7)
 - Removes watermark
 - Lifts the 15s duration cap
 - Offline key (NERO1.…). Open the app → Enter license… → paste once.
-- Keys are emailed after Getly payment. Do not share your key.
+- Keys are sent after Getly payment. Do not share your key.
+- If the app says "Invalid key: bad signature", copy the whole NERO1.… line
+  again (no spaces / line breaks). Keys for version 0.1.0 do not work.
 
 ffmpeg (required)
 -----------------
@@ -31,6 +33,9 @@ How to run
 2. Install / place ffmpeg as above.
 3. Double-click NeroGifConverter.exe
 4. Convert a short clip; free mode adds the watermark.
+5. Have a key? Click "Enter license…", paste it, convert the same clip again:
+   the watermark is gone. To go back to free, delete license.key next to the
+   exe and in %APPDATA%\NERO Tools\GIF Converter\.
 
 Free web tool (no watermark, shorter clips)
 -------------------------------------------

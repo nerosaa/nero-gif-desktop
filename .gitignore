@@ -11,3 +11,9 @@ license.key
 tests/out/*
 !tests/out/.gitkeep
 .DS_Store
+# License signing secrets — never commit
+*.key
+.nero-secrets/
+**/.nero-secrets/
+*private*.key
+sample-key.txt

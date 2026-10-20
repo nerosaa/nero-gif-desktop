@@ -1,0 +1,52 @@
+# UPLOAD_V020 — update nerosaa/nero-gif-desktop (main) from v0.1.0 to v0.2.0
+# Ed25519 licensing. Upload from the clean mirror: /workspace/nero-gif-desktop-upload-v020/
+# Browser upload as nerosaa (Add file -> Upload files / Create new file with full path).
+# Commit message suggestion: "v0.2.0: Ed25519 offline license keys, remove HMAC dev secret + bypasses"
+#
+# NEVER upload: *.key, license.key, sample-key.txt, anything from /home/box/.nero-secrets/,
+# tests/out/*.gif, dist/, build/, __pycache__/
+#
+# After commit: Actions "Build Windows" must go green (now also runs unit tests), then publish a
+# NEW release v0.2.0 with the new zip. Treat the v0.1.0 release zip as unsellable
+# (its dev secret is public -> keys forgeable); delete or mark it superseded (needs NERO's OK).
+
+## MODIFIED (overwrite at these repo paths)
+.github/workflows/build-windows.yml
+.gitignore
+GETLY_DRAFT.md
+README-WINDOWS.txt
+README.md
+RELEASE_NOTES.md
+UPLOAD_MANIFEST.txt
+nero_gif/__init__.py
+nero_gif/cli.py
+nero_gif/converter.py
+nero_gif/license_check.py
+scripts/build_windows.ps1
+scripts/gen_license.py
+scripts/smoke_test.sh
+
+## ADDED (new files at these repo paths)
+UPLOAD_V020.txt
+nero_gif/_ed25519.py
+scripts/gen_keypair.py
+scripts/wm_check.py
+tests/test_license.py
+third_party/ED25519_NOTICE.md
+
+## REMOVED
+# (none — no files deleted; removed features live inside modified files)
+
+## UNCHANGED (already in repo, no action)
+LICENSE
+PRODUCT.md
+assets/DejaVuSans.ttf
+nero_gif/__main__.py
+nero_gif/gui.py
+nero_gif/paths.py
+requirements.txt
+run_cli.py
+run_gui.py
+tests/fixtures/sample.mp4
+tests/out/.gitkeep
+third_party/FFMPEG_NOTICE.md

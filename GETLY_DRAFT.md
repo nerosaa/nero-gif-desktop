@@ -27,7 +27,7 @@ Turn videos into GIFs on your PC. Free build has a small watermark and a 15s cap
 **Pro unlock ($7)**
 - No watermark
 - Unlimited duration (within your PC memory)
-- Offline key — paste once; no phone-home
+- Offline key — paste once; no phone-home, no account
 
 **Requirements**
 - Windows 10/11 64-bit
@@ -45,8 +45,10 @@ Not affiliated with ScreenToGif, Kap, or Gifski.
 1. `NERO-Tools-GIF-Converter-windows-x64.zip` — Actions artifact / `scripts/build_windows.ps1` output
    - Contains `NeroGifConverter.exe`, `_internal/` (PyInstaller), `assets/DejaVuSans.ttf` if not internalized
 2. Optional: `README-WINDOWS.txt` inside the zip (how to install ffmpeg, how to unlock)
-3. **Do not** put `license.key` or `NERO_LICENSE_SECRET` in the zip
-4. Fulfillment: generate keys with `scripts/gen_license.py` using production secret; send key text to buyer
+3. **Do not** put `license.key`, the Ed25519 private key, or any minted key in the zip (zip must be v0.2.0+; v0.1.0 had a forgeable dev secret)
+4. Fulfillment (per sale, offline on NERO's machine):
+   `python scripts/gen_license.py --private-key <offline private key> --buyer '<getly order id / email>'`
+   → send the single `NERO1.…` line to the buyer (Getly message / email). Never send or upload the private key.
 5. Screenshots: free watermark vs pro clean (`tests/out/watermark_preview.png` as starting point)
 
 ## itch.io (later)
@@ -57,6 +59,8 @@ Same zip + same $7 key SKU; link back to Getly if itch payout is slower.
 
 - [ ] Windows zip built on a real Windows machine
 - [ ] Double-click exe converts a sample MP4 with watermark
-- [ ] Unlock key removes watermark on that machine
-- [ ] Production `NERO_LICENSE_SECRET` set and recorded offline by NERO
+- [ ] Unlock key (minted with the production private key) removes watermark on that machine, same video, one pass (README → "Windows unlock test")
+- [x] Production Ed25519 keypair generated; public key embedded (v0.2.0); private key stored offline, not in repo
+- [ ] v0.2.0 Windows zip rebuilt by Actions and published as the Release download
+- [ ] Private key backed up offline by NERO
 - [ ] Getly product created with USDT price $7
