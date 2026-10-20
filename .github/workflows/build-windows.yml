@@ -1,8 +1,9 @@
 # Build Windows zip via GitHub Actions (windows-latest).
 # Artifact: NERO-Tools-GIF-Converter-windows-x64.zip
 #
-# NEVER put NERO_LICENSE_SECRET, production keys, or real unlock tokens
-# in this workflow, env, or logs. License minting stays offline with NERO.
+# NEVER put the Ed25519 PRIVATE key, real NERO1 buyer keys, or any secret
+# in this workflow, env, or logs. The app embeds only the PUBLIC key;
+# license minting stays offline with NERO (scripts/gen_license.py).
 
 name: Build Windows
 
@@ -43,6 +44,11 @@ jobs:
           choco install ffmpeg -y --no-progress
           ffmpeg -version
 
+      - name: Unit tests (license, throwaway keypair)
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: python -m unittest discover -s tests -v
+
       - name: Smoke convert (free watermarked)
         env:
           PYTHONPATH: ${{ github.workspace }}
@@ -51,10 +57,7 @@ jobs:
           python -m nero_gif status
           python -m nero_gif convert tests\fixtures\sample.mp4 `
             -o tests\out\ci_free.gif --duration 2 --width 320 --fps 10 --force-free
-          python -m nero_gif convert tests\fixtures\sample.mp4 `
-            -o tests\out\ci_paid.gif --duration 2 --width 320 --fps 10 --force-paid
           if (-not (Test-Path tests\out\ci_free.gif)) { throw "ci_free.gif missing" }
-          if (-not (Test-Path tests\out\ci_paid.gif)) { throw "ci_paid.gif missing" }
           Write-Host "Smoke OK"
 
       - name: PyInstaller one-folder (GUI)
@@ -69,6 +72,7 @@ jobs:
             --hidden-import nero_gif.gui `
             --hidden-import nero_gif.converter `
             --hidden-import nero_gif.license_check `
+            --hidden-import nero_gif._ed25519 `
             --hidden-import nero_gif.paths `
             --hidden-import nero_gif.cli `
             run_gui.py
@@ -84,6 +88,7 @@ jobs:
           Copy-Item -Force README.md $stage\README.md
           Copy-Item -Force README-WINDOWS.txt $stage\README-WINDOWS.txt
           Copy-Item -Force third_party\FFMPEG_NOTICE.md $stage\FFMPEG_NOTICE.md
+          Copy-Item -Force third_party\ED25519_NOTICE.md $stage\ED25519_NOTICE.md
           Copy-Item -Force LICENSE $stage\LICENSE
 
       - name: Zip artifact
