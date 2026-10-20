@@ -1,0 +1,3 @@
+# Runtime: Python stdlib + system/bundled ffmpeg only (no pip deps).
+# Build / CI (Windows packaging):
+pyinstaller>=6.0

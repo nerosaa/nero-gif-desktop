@@ -1,0 +1,52 @@
+# UPLOAD_MANIFEST — create NEW public repo nerosaa/nero-gif-desktop
+# Repo does NOT exist until the browser uploader creates it. Do not claim it is live.
+#
+# Browser steps (nerosaa logged in):
+# 1) https://github.com/new → Owner nerosaa → Repository name: nero-gif-desktop
+#    Public, no README/license template (we upload our own).
+# 2) Upload files below via web UI (Add file → Upload files), preserving paths.
+#    GitHub web UI cannot pick folders; create/upload with full path when needed,
+#    e.g. .github/workflows/build-windows.yml , nero_gif/gui.py
+# 3) Commit to main.
+# 4) Actions → enable workflows if prompted → run "Build Windows" (workflow_dispatch)
+#    or push already triggers it on main.
+# 5) Download artifact NERO-Tools-GIF-Converter-windows-x64 from the successful run.
+#    Inside: NERO-Tools-GIF-Converter-windows-x64.zip
+#
+# NEVER upload: license.key, any file containing a real NERO_LICENSE_SECRET,
+# real NERO1 keys, tests/out/*.gif, dist/, build/, __pycache__/
+#
+# Do NOT publish Getly until the Windows zip smoke-passes on a real Windows PC.
+#
+# Clean mirror (same 26 files, no tests/out GIFs): /workspace/nero-gif-desktop-upload/
+# Source of truth: /workspace/nero-gif-desktop/
+#
+# Exact files to upload:
+.github/workflows/build-windows.yml
+.gitignore
+GETLY_DRAFT.md
+LICENSE
+PRODUCT.md
+README-WINDOWS.txt
+README.md
+RELEASE_NOTES.md
+UPLOAD_MANIFEST.txt
+assets/DejaVuSans.ttf
+nero_gif/__init__.py
+nero_gif/__main__.py
+nero_gif/cli.py
+nero_gif/converter.py
+nero_gif/gui.py
+nero_gif/license_check.py
+nero_gif/paths.py
+requirements.txt
+run_cli.py
+run_gui.py
+scripts/build_windows.ps1
+scripts/gen_license.py
+scripts/smoke_test.sh
+tests/fixtures/sample.mp4
+tests/out/.gitkeep
+third_party/FFMPEG_NOTICE.md
+
+# Total files: 26
