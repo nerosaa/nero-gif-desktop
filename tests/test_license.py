@@ -104,7 +104,8 @@ class LicenseTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             p = Path(td) / "k.key"
             lc.write_private_key_file(p, self.seed)
-            self.assertEqual(oct(p.stat().st_mode & 0o777), "0o600")
+            if os.name != "nt":  # Windows ignores POSIX chmod bits
+                self.assertEqual(oct(p.stat().st_mode & 0o777), "0o600")
             self.assertEqual(lc.read_private_key_file(p), self.seed)
 
 
