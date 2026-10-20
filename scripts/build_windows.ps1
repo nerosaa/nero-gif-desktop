@@ -1,6 +1,6 @@
 # Run on a Windows machine with Python 3.11+ installed.
 # Produces dist\NeroGifConverter\ and NERO-Tools-GIF-Converter-windows-x64.zip
-# NEVER set NERO_LICENSE_SECRET in this script or commit a real secret.
+# NEVER put the Ed25519 private key or real buyer keys in this script or the zip.
 
 $ErrorActionPreference = "Stop"
 Set-Location $PSScriptRoot\..
@@ -18,6 +18,7 @@ python -m PyInstaller `
   --hidden-import nero_gif.gui `
   --hidden-import nero_gif.converter `
   --hidden-import nero_gif.license_check `
+  --hidden-import nero_gif._ed25519 `
   --hidden-import nero_gif.paths `
   --hidden-import nero_gif.cli `
   run_gui.py
@@ -33,6 +34,7 @@ Copy-Item -Recurse -Force "dist\NeroGifConverter\*" $stage\
 Copy-Item -Force "README.md" "$stage\README.md"
 Copy-Item -Force "README-WINDOWS.txt" "$stage\README-WINDOWS.txt"
 Copy-Item -Force "third_party\FFMPEG_NOTICE.md" "$stage\FFMPEG_NOTICE.md"
+Copy-Item -Force "third_party\ED25519_NOTICE.md" "$stage\ED25519_NOTICE.md"
 Copy-Item -Force "LICENSE" "$stage\LICENSE"
 
 $zip = "NERO-Tools-GIF-Converter-windows-x64.zip"
