@@ -9,6 +9,7 @@ from pathlib import Path
 from . import __app_name__, __version__, license_check
 from .converter import CompressOptions, ConvertError, ConvertOptions, compress_gif, video_to_gif
 from .paths import find_ffmpeg
+from .presets import MB, PRESETS, social_gif
 
 
 def _log(msg: str) -> None:
@@ -69,6 +70,76 @@ def cmd_compress(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_presets(_: argparse.Namespace) -> int:
+    for k, p in PRESETS.items():
+        steps = " | ".join(f"{e.width}px/{e.fps}fps/{e.colors}c" for e in p.ladder)
+        print(f"{k:8s} target<={p.max_bytes / MB:.2f}MB  {p.label}  [{steps}]")
+    return 0
+
+
+def cmd_social(args: argparse.Namespace) -> int:
+    out = Path(args.output) if args.output else Path(args.input).with_name(
+        f"{Path(args.input).stem}_{args.preset}.gif")
+    try:
+        res = social_gif(args.input, out, args.preset, start=args.start, duration=args.duration,
+                         screen_recording=args.screen, watermark=True if args.force_free else None,
+                         log=_log)
+    except ConvertError as e:
+        print(f"ERROR: {e}", file=sys.stderr)
+        return 1
+    f = res.final
+    print(f"{out}\nsize={res.size} bytes ({res.size / MB:.2f} MB) target={res.preset.max_bytes} "
+          f"fits={res.fits} tries={len(res.attempts)} final={f.width}px/{f.fps}fps/{f.colors}c/{f.dither}")
+    return 0 if res.fits else 2
+
+
+def cmd_record(args: argparse.Namespace) -> int:
+    import time
+
+    from .recorder import Recorder, Region
+
+    try:
+        region = Region.parse(args.region) if args.region else None
+    except ValueError as e:
+        print(f"ERROR: {e}", file=sys.stderr)
+        return 1
+    try:
+        rec = Recorder(region=region, fps=args.fps, cursor=not args.no_cursor)
+    except (ConvertError, FileNotFoundError) as e:
+        print(f"ERROR: {e}", file=sys.stderr)
+        return 1
+    if args.countdown:
+        for i in range(int(args.countdown), 0, -1):
+            print(f"recording in {i}…", flush=True)
+            time.sleep(1)
+    try:
+        rec.start()
+        print(f"recording ({' '.join(rec.cmd[5:-1])}) — Ctrl+C to stop", flush=True)
+        try:
+            while rec.running and rec.elapsed() < args.seconds:
+                time.sleep(0.1)
+        except KeyboardInterrupt:
+            pass
+        secs = rec.elapsed()
+        video = rec.stop()
+        out = Path(args.output)
+        if args.preset:
+            res = social_gif(video, out, args.preset, duration=secs + 1, screen_recording=True,
+                             watermark=True if args.force_free else None, log=_log)
+            print(f"size={res.size} fits={res.fits}")
+        else:
+            opts = ConvertOptions(duration=secs + 1, width=args.width, fps=args.fps,
+                                  watermark=True if args.force_free else None)
+            video_to_gif(video, out, opts, log=_log)
+    except ConvertError as e:
+        print(f"ERROR: {e}", file=sys.stderr)
+        return 1
+    finally:
+        rec.cleanup()
+    print(out)
+    return 0
+
+
 def cmd_unlock(args: argparse.Namespace) -> int:
     try:
         dest = license_check.save_key(args.key)
@@ -106,6 +177,31 @@ def build_parser() -> argparse.ArgumentParser:
     g.add_argument("--colors", type=int, default=128)
     g.add_argument("--force-free", action="store_true")
     g.set_defaults(func=cmd_compress)
+
+    pr = sub.add_parser("presets", help="List social presets")
+    pr.set_defaults(func=cmd_presets)
+
+    so = sub.add_parser("social", help="Perfect social GIF (auto size-fit)")
+    so.add_argument("input")
+    so.add_argument("--preset", required=True, choices=list(PRESETS))
+    so.add_argument("-o", "--output", default=None)
+    so.add_argument("--start", type=float, default=0.0)
+    so.add_argument("--duration", type=float, default=None)
+    so.add_argument("--screen", action="store_true", help="Input is a screen recording (mpdecimate)")
+    so.add_argument("--force-free", action="store_true")
+    so.set_defaults(func=cmd_social)
+
+    r = sub.add_parser("record", help="Record screen → GIF (gdigrab on Windows, x11grab on Linux)")
+    r.add_argument("-o", "--output", required=True)
+    r.add_argument("--region", default=None, help="x,y,w,h (default: full screen)")
+    r.add_argument("--seconds", type=float, default=5.0, help="Stop after N seconds (free max 15)")
+    r.add_argument("--fps", type=int, default=12)
+    r.add_argument("--width", type=int, default=480)
+    r.add_argument("--countdown", type=int, default=0)
+    r.add_argument("--no-cursor", action="store_true")
+    r.add_argument("--preset", default=None, choices=list(PRESETS))
+    r.add_argument("--force-free", action="store_true")
+    r.set_defaults(func=cmd_record)
 
     u = sub.add_parser("unlock", help="Save a pro license key")
     u.add_argument("key")

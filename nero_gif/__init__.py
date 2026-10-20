@@ -1,4 +1,4 @@
-"""NERO Tools — GIF Converter (Windows desktop MVP)."""
+"""NERO Tools — GIF Converter (Windows desktop)."""
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 __app_name__ = "NERO Tools GIF Converter"
