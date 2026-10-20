@@ -54,9 +54,15 @@ def _run(cmd: list[str], log: ProgressCb = None) -> None:
 
 
 def _want_watermark(explicit: Optional[bool]) -> bool:
-    if explicit is not None:
-        return explicit
-    return not license_check.current_license().is_paid
+    """Watermark is mandatory unless a valid pro license is installed.
+
+    `explicit=True` can force a watermark (e.g. previews); `explicit=False`
+    is ignored without a valid license — there is no free bypass.
+    """
+    paid = license_check.current_license().is_paid
+    if explicit is True:
+        return True
+    return not paid
 
 
 def _clamp_duration(duration: float, paid: bool) -> float:

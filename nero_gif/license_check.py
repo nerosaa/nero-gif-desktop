@@ -1,35 +1,44 @@
-"""Offline license unlock (HMAC signed token). No phone-home."""
+"""Offline license unlock — Ed25519 signed token. No phone-home.
+
+Key format:  NERO1.<payload_b64url>.<sig_b64url>
+  payload = compact JSON, e.g. {"e":"buyer@email","i":"2026-10-20","tier":"pro","v":2}
+  sig     = Ed25519 signature (64 bytes) over the ASCII payload_b64url string.
+
+The app embeds ONLY the public key below. The private key stays offline with
+NERO (see scripts/gen_keypair.py / scripts/gen_license.py). There is no
+environment-variable, CLI flag, or default-secret bypass in shipped code.
+"""
 
 from __future__ import annotations
 
 import base64
-import hashlib
-import hmac
+import datetime as _dt
 import json
 import os
-import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
+from . import _ed25519
 from .paths import app_dir, config_dir
 
-# Replace at build/release time via env NERO_LICENSE_SECRET (keep private).
-_DEFAULT_DEV_SECRET = "DEV-ONLY-CHANGE-ME-NERO-GIF-2026"
+# Production verification key (public, safe to ship). Generated 2026-10-20.
+PUBLIC_KEY_B64 = "zPe7ZJxycaAjzBThV5BhweDsE5o_UZtWO0lcuF0S4W4"
+
 PREFIX = "NERO1"
+PAYLOAD_VERSION = 2
 FREE_MAX_SECONDS = 15.0
 WATERMARK_TEXT = "NERO Tools — free"
+PRIVATE_KEY_HEADER = "NERO-ED25519-PRIVATE-KEY-V1"
 
 
-def _secret() -> bytes:
-    return os.environ.get("NERO_LICENSE_SECRET", _DEFAULT_DEV_SECRET).encode("utf-8")
-
-
-def _b64url(data: bytes) -> str:
+def b64url(data: bytes) -> str:
     return base64.urlsafe_b64encode(data).rstrip(b"=").decode("ascii")
 
 
-def _b64url_decode(s: str) -> bytes:
+def b64url_decode(s: str) -> bytes:
+    if not s or any(c not in "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_" for c in s):
+        raise ValueError("bad base64url")
     pad = "=" * (-len(s) % 4)
     return base64.urlsafe_b64decode(s + pad)
 
@@ -46,34 +55,33 @@ class LicenseInfo:
         return self.valid and self.tier == "pro"
 
 
-def sign_payload(payload: dict) -> str:
-    """Create a license key string from a payload dict."""
-    body = _b64url(json.dumps(payload, separators=(",", ":"), sort_keys=True).encode())
-    sig = _b64url(hmac.new(_secret(), body.encode("ascii"), hashlib.sha256).digest())
-    return f"{PREFIX}.{body}.{sig}"
+def _embedded_public_key() -> bytes:
+    return b64url_decode(PUBLIC_KEY_B64)
 
 
-def verify_key(key: str) -> LicenseInfo:
+def verify_key(key: str, public_key: Optional[bytes] = None) -> LicenseInfo:
+    """Verify a NERO1 key. `public_key` override exists for unit tests only."""
     key = (key or "").strip()
     if not key:
         return LicenseInfo(False, "free", "empty key")
     parts = key.split(".")
     if len(parts) != 3 or parts[0] != PREFIX:
         return LicenseInfo(False, "free", "bad format")
-    body, sig = parts[1], parts[2]
-    expect = _b64url(hmac.new(_secret(), body.encode("ascii"), hashlib.sha256).digest())
-    if not hmac.compare_digest(expect, sig):
+    body, sig_s = parts[1], parts[2]
+    try:
+        sig = b64url_decode(sig_s)
+        pub = public_key if public_key is not None else _embedded_public_key()
+    except Exception:
+        return LicenseInfo(False, "free", "bad signature")
+    if len(sig) != 64 or not _ed25519.verify(pub, body.encode("ascii"), sig):
         return LicenseInfo(False, "free", "bad signature")
     try:
-        payload = json.loads(_b64url_decode(body).decode("utf-8"))
+        payload = json.loads(b64url_decode(body).decode("utf-8"))
     except Exception:
         return LicenseInfo(False, "free", "bad payload")
-    if payload.get("tier") != "pro":
-        return LicenseInfo(False, "free", "not pro tier", payload)
-    exp = payload.get("exp")
-    if exp is not None and int(exp) < int(time.time()):
-        return LicenseInfo(False, "free", "expired", payload)
-    return LicenseInfo(True, "pro", "ok", payload)
+    if not isinstance(payload, dict) or payload.get("tier") != "pro":
+        return LicenseInfo(False, "free", "not pro tier", payload if isinstance(payload, dict) else None)
+    return LicenseInfo(True, "pro", f"licensed to {payload.get('e', '?')}", payload)
 
 
 def license_paths() -> list[Path]:
@@ -102,7 +110,6 @@ def save_key(key: str) -> Path:
         raise ValueError(f"Invalid license: {info.note}")
     dest = config_dir() / "license.key"
     dest.write_text(key.strip() + "\n", encoding="utf-8")
-    # Also drop a copy next to the app for portable use
     try:
         (app_dir() / "license.key").write_text(key.strip() + "\n", encoding="utf-8")
     except OSError:
@@ -110,28 +117,42 @@ def save_key(key: str) -> Path:
     return dest
 
 
-def force_paid_env() -> bool:
-    """Dev/test override: NERO_GIF_PAID=1 skips watermark without a key file."""
-    return os.environ.get("NERO_GIF_PAID", "").strip() in ("1", "true", "TRUE", "yes")
-
-
 def current_license() -> LicenseInfo:
-    if force_paid_env():
-        return LicenseInfo(True, "pro", "env NERO_GIF_PAID=1")
     key = load_stored_key()
     if not key:
         return LicenseInfo(False, "free", "no license file")
     return verify_key(key)
 
 
-def make_pro_key(name: str = "buyer", days: Optional[int] = None) -> str:
-    """Helper for NERO to mint keys (also exposed via scripts/gen_license.py)."""
-    payload = {
-        "v": 1,
-        "tier": "pro",
-        "n": name,
-        "iat": int(time.time()),
-    }
-    if days is not None:
-        payload["exp"] = int(time.time()) + int(days) * 86400
-    return sign_payload(payload)
+# ---- Minting helpers (used offline by scripts/; need the PRIVATE key) ----
+
+def sign_payload(private_seed: bytes, payload: dict) -> str:
+    body = b64url(json.dumps(payload, separators=(",", ":"), sort_keys=True).encode("utf-8"))
+    sig = _ed25519.sign(private_seed, body.encode("ascii"))
+    return f"{PREFIX}.{body}.{b64url(sig)}"
+
+
+def make_pro_key(private_seed: bytes, buyer: str, issued: Optional[str] = None) -> str:
+    issued = issued or _dt.date.today().isoformat()
+    payload = {"v": PAYLOAD_VERSION, "tier": "pro", "e": str(buyer), "i": issued}
+    return sign_payload(private_seed, payload)
+
+
+def write_private_key_file(path: Path, seed: bytes) -> None:
+    path = Path(path)
+    if not path.parent.exists():
+        path.parent.mkdir(parents=True, mode=0o700)
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w", encoding="ascii") as f:
+        f.write(f"{PRIVATE_KEY_HEADER}\n{b64url(seed)}\n")
+    os.chmod(path, 0o600)
+
+
+def read_private_key_file(path: Path) -> bytes:
+    lines = Path(path).read_text(encoding="ascii").split()
+    if len(lines) != 2 or lines[0] != PRIVATE_KEY_HEADER:
+        raise ValueError(f"{path}: not a NERO Ed25519 private key file")
+    seed = b64url_decode(lines[1])
+    if len(seed) != 32:
+        raise ValueError(f"{path}: bad private key length")
+    return seed

@@ -34,12 +34,10 @@ def cmd_convert(args: argparse.Namespace) -> int:
         duration=args.duration,
         width=args.width,
         fps=args.fps,
-        watermark=None if args.watermark is None else bool(args.watermark),
+        watermark=None,
     )
     if args.force_free:
         opts.watermark = True
-    if args.force_paid:
-        opts.watermark = False
     out = Path(args.output) if args.output else Path(args.input).with_suffix(".gif")
     try:
         video_to_gif(args.input, out, opts, log=_log)
@@ -55,12 +53,10 @@ def cmd_compress(args: argparse.Namespace) -> int:
         scale=args.scale,
         fps=args.fps,
         colors=args.colors,
-        watermark=None if args.watermark is None else bool(args.watermark),
+        watermark=None,
     )
     if args.force_free:
         opts.watermark = True
-    if args.force_paid:
-        opts.watermark = False
     out = Path(args.output) if args.output else Path(args.input).with_name(
         Path(args.input).stem + "_compressed.gif"
     )
@@ -84,12 +80,6 @@ def cmd_unlock(args: argparse.Namespace) -> int:
     return 0
 
 
-def cmd_genkey(args: argparse.Namespace) -> int:
-    key = license_check.make_pro_key(name=args.name, days=args.days)
-    print(key)
-    return 0
-
-
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="nero-gif", description=__app_name__)
     p.add_argument("--version", action="version", version=__version__)
@@ -106,8 +96,6 @@ def build_parser() -> argparse.ArgumentParser:
     c.add_argument("--width", type=int, default=480)
     c.add_argument("--fps", type=int, default=10)
     c.add_argument("--force-free", action="store_true", help="Force watermark")
-    c.add_argument("--force-paid", action="store_true", help="Skip watermark")
-    c.add_argument("--watermark", type=int, choices=[0, 1], default=None)
     c.set_defaults(func=cmd_convert)
 
     g = sub.add_parser("compress", help="Compress / re-encode GIF")
@@ -117,18 +105,11 @@ def build_parser() -> argparse.ArgumentParser:
     g.add_argument("--fps", type=int, default=10)
     g.add_argument("--colors", type=int, default=128)
     g.add_argument("--force-free", action="store_true")
-    g.add_argument("--force-paid", action="store_true")
-    g.add_argument("--watermark", type=int, choices=[0, 1], default=None)
     g.set_defaults(func=cmd_compress)
 
     u = sub.add_parser("unlock", help="Save a pro license key")
     u.add_argument("key")
     u.set_defaults(func=cmd_unlock)
-
-    k = sub.add_parser("genkey", help="Mint a pro key (needs NERO_LICENSE_SECRET)")
-    k.add_argument("--name", default="buyer")
-    k.add_argument("--days", type=int, default=None, help="Optional expiry in days")
-    k.set_defaults(func=cmd_genkey)
 
     return p
 
