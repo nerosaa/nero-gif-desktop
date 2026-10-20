@@ -14,6 +14,7 @@ python -m PyInstaller `
   --windowed `
   --name NeroGifConverter `
   --add-data "assets\DejaVuSans.ttf;assets" `
+  --add-data "nero_gif\locales;nero_gif\locales" `
   --hidden-import nero_gif `
   --hidden-import nero_gif.gui `
   --hidden-import nero_gif.converter `
@@ -21,6 +22,9 @@ python -m PyInstaller `
   --hidden-import nero_gif._ed25519 `
   --hidden-import nero_gif.paths `
   --hidden-import nero_gif.cli `
+  --hidden-import nero_gif.i18n `
+  --hidden-import nero_gif.presets `
+  --hidden-import nero_gif.recorder `
   run_gui.py
 
 if (-not (Test-Path "dist\NeroGifConverter\NeroGifConverter.exe")) {
