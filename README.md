@@ -1,6 +1,7 @@
-# NERO Tools — GIF Converter (Windows desktop MVP)
+# NERO Tools — GIF Converter (Windows desktop)
 
-English desktop app: **Video → GIF** and **GIF compress**.  
+Desktop app in 10 languages: **Record screen → GIF**, **Video → GIF**, **Perfect social GIF**
+(auto size-fit for X / Discord / Reddit / Telegram-WeChat stickers / GitHub README) and **GIF compress**.  
 Free build adds a visible watermark (`NERO Tools — free`) and caps duration at **15 seconds**.  
 A pro **license key** (Ed25519-signed) removes the watermark and lifts the duration cap. Offline check only (no phone-home).
 
@@ -27,6 +28,13 @@ python3 -m unittest discover -s tests -v      # license tests (throwaway keypair
 python3 -m nero_gif convert tests/fixtures/sample.mp4 \
   -o tests/out/free_wm.gif --duration 2 --width 320 --fps 10
 
+# Social presets (auto size-fit, max 4 tries; exit 2 = still over target)
+python3 -m nero_gif presets
+python3 -m nero_gif social tests/fixtures/sample.mp4 --preset discord -o tests/out/discord.gif
+
+# Screen recording (x11grab on Linux, gdigrab on Windows)
+python3 -m nero_gif record -o tests/out/rec.gif --region 0,0,640,400 --seconds 3 --preset sticker
+
 # Compress
 python3 -m nero_gif compress tests/out/free_wm.gif \
   -o tests/out/compressed.gif --scale 0.75 --fps 8 --colors 64
@@ -44,6 +52,20 @@ GUI (needs a display + tkinter):
 ```bash
 PYTHONPATH=. python3 -m nero_gif gui
 ```
+
+## Features (0.3.0)
+
+- **Record screen**: full screen or region (drag-select or x/y/w/h), FPS, cursor on/off,
+  countdown, Stop window. ffmpeg `gdigrab` on Windows (`-offset_x -offset_y -video_size -i desktop`),
+  `x11grab` on Linux; stopped cleanly by sending `q` to ffmpeg. Code: `nero_gif/recorder.py`.
+- **Perfect social GIF**: presets in `nero_gif/presets.py`; two-pass palettegen
+  (`stats_mode=diff`) / paletteuse (`sierra2_4a` / `bayer`), `mpdecimate` where it helps,
+  up to 4 encodes stepping width/fps/colors down until the target size fits.
+- **i18n**: `nero_gif/i18n.py` + `nero_gif/locales/<code>.json` (en, zh-Hans, zh-Hant, ja, ko,
+  es, pt, de, fr, ru). Add a string: put it in `en.json`, then run
+  `MINIMAX_API_KEY=… python3 scripts/translate_locales.py --force` (or edit by hand);
+  `tests/test_i18n.py` fails if any language misses a key or a `{placeholder}`.
+- Free tier rules apply everywhere (recording, social, compress): watermark + 15 s.
 
 ## Licensing (Ed25519, offline)
 

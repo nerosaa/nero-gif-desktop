@@ -1,5 +1,39 @@
 # Release notes — NERO Tools GIF Converter
 
+## 0.3.0 — screen recording, social presets, 10 languages
+
+- **Record screen → GIF** (new first tab). Full screen or a region (drag to select,
+  or type x / y / w / h), FPS, optional mouse cursor, 0/3/5 s countdown, small
+  always-on-top **Stop** window. Windows uses ffmpeg `gdigrab`; stop is clean
+  (`q` sent to ffmpeg). Then straight to a standard GIF or a social preset.
+  Free tier: recording stops automatically at 15 s and the GIF is watermarked.
+- **Perfect social GIF** (new tab, also selectable after recording). One click,
+  auto size-fit: palettegen `stats_mode=diff` + paletteuse (`sierra2_4a` first,
+  then `bayer`), `mpdecimate` on later steps / screen recordings, up to 4 tries
+  stepping width / fps / colors down until the file fits. Final size shown.
+
+  | Preset | Target | Ladder (width / fps / colors) |
+  |--------|--------|-------------------------------|
+  | X / Twitter | ≤ 14.5 MB (limit 15 MB) | 640/15/256 → 560/12/192 → 480/10/128 → 400/8/96 |
+  | Discord (free accounts) | ≤ 9.5 MB (limit 10 MB) | 480/15/256 → 480/12/160 → 400/10/128 → 320/8/96 |
+  | Reddit | ≤ 19 MB | 640/15/256 → 560/12/192 → 480/10/128 → 400/8/96 |
+  | Telegram / WeChat sticker | ≤ 0.95 MB | 320/12/128 → 280/10/96 → 240/8/64 → 200/6/48 |
+  | GitHub README | ≤ 9.5 MB (limit 10 MB) | 800/12/256 → 720/10/192 → 640/10/128 → 480/8/96 |
+
+  Never upscales (`scale='min(iw,W)'`). Works on video **or** GIF input.
+- **10 UI languages**: English, 简体中文, 繁體中文, 日本語, 한국어, Español,
+  Português, Deutsch, Français, Русский. Auto-detected from the OS UI language,
+  switcher top-right, choice saved in `%APPDATA%\NERO Tools\GIF Converter\settings.json`.
+  License dialog and error messages are translated too (raw ffmpeg output stays English).
+- CLI: `presets`, `social INPUT --preset KEY`, `record -o OUT.gif [--region x,y,w,h] [--seconds N] [--preset KEY]`.
+- Free-tier 15 s cap now also applies to **Compress GIF** (it was missed in 0.2.0).
+- Per-monitor DPI awareness on Windows, so region coordinates match screen pixels.
+- ffmpeg console windows are hidden in the windowed exe.
+- Licensing unchanged (Ed25519, same public key). 0.2.0 keys keep working.
+- New tests: `tests/test_presets.py`, `tests/test_i18n.py`, `tests/test_recorder.py`.
+- Translations were drafted with `scripts/translate_locales.py` (MiniMax API, key from env only) and checked by tests
+  (all keys, same placeholders) plus a manual read-through.
+
 ## 0.2.0 — license hardening (required before selling)
 
 - **Ed25519 license keys.** The app now embeds only a public key; keys are

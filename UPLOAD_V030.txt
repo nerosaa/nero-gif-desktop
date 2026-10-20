@@ -1,0 +1,66 @@
+# UPLOAD_V030 — update nerosaa/nero-gif-desktop (main) from v0.2.0 to v0.3.0
+# Screen recording -> GIF, "Perfect social GIF" presets (auto size-fit), 10 UI languages.
+# Upload from the clean mirror: /workspace/nero-gif-desktop-upload-v030/
+# Browser upload as nerosaa. New directory nero_gif/locales/ does not exist yet:
+# create it with "Add file -> Create new file" and the full path
+# (e.g. nero_gif/locales/en.json, paste content), then upload the other 9 JSON files into it.
+# Commit message suggestion: "v0.3.0: screen recording, social GIF presets, 10 languages"
+#
+# NEVER upload: *.key, license.key, sample-key.txt, anything from /home/box/.nero-secrets/,
+# tests/out/*.gif, dist/, build/, __pycache__/
+# Licensing is unchanged (same Ed25519 public key) -> 0.2.0 keys keep working.
+#
+# After commit: Actions "Build Windows" must go green (unit tests incl. new preset/i18n/recorder
+# tests, social smoke, locales-bundled check). The "gdigrab probe (best effort)" step is
+# continue-on-error: hosted runners may lack an interactive desktop. Then publish release v0.3.0.
+
+## MODIFIED (overwrite at these repo paths)
+# .github/workflows/
+.github/workflows/build-windows.yml
+# (repo root)
+README-WINDOWS.txt
+README.md
+RELEASE_NOTES.md
+# nero_gif/
+nero_gif/__init__.py
+nero_gif/cli.py
+nero_gif/converter.py
+nero_gif/gui.py
+# scripts/
+scripts/build_windows.ps1
+
+## ADDED (new files at these repo paths)
+# (repo root)
+UPLOAD_V030.txt
+# nero_gif/
+nero_gif/i18n.py
+nero_gif/presets.py
+nero_gif/recorder.py
+# nero_gif/locales/   <-- NEW DIRECTORY
+nero_gif/locales/en.json
+nero_gif/locales/zh-Hans.json
+nero_gif/locales/zh-Hant.json
+nero_gif/locales/ja.json
+nero_gif/locales/ko.json
+nero_gif/locales/es.json
+nero_gif/locales/pt.json
+nero_gif/locales/de.json
+nero_gif/locales/fr.json
+nero_gif/locales/ru.json
+# scripts/
+scripts/translate_locales.py
+# tests/
+tests/test_i18n.py
+tests/test_presets.py
+tests/test_recorder.py
+
+## REMOVED
+# (none)
+
+## UNCHANGED (already in repo, no action)
+# .gitignore, LICENSE, PRODUCT.md, GETLY_DRAFT.md, UPLOAD_MANIFEST.txt, UPLOAD_V020.txt,
+# requirements.txt, run_cli.py, run_gui.py, assets/DejaVuSans.ttf,
+# nero_gif/__main__.py, nero_gif/_ed25519.py, nero_gif/license_check.py, nero_gif/paths.py,
+# scripts/gen_keypair.py, scripts/gen_license.py, scripts/smoke_test.sh, scripts/wm_check.py,
+# tests/test_license.py, tests/fixtures/sample.mp4, tests/out/.gitkeep,
+# third_party/FFMPEG_NOTICE.md, third_party/ED25519_NOTICE.md

@@ -5,7 +5,8 @@ Free build
 ----------
 - Visible watermark: "NERO Tools — free" (bottom-right)
 - Max duration: 15 seconds per export
-- Video → GIF and GIF compress, files stay on your PC
+- Record screen → GIF, Video → GIF, Perfect social GIF, GIF compress
+- Files stay on your PC
 
 Pro unlock (USD 7)
 ------------------
@@ -36,6 +37,22 @@ How to run
 5. Have a key? Click "Enter license…", paste it, convert the same clip again:
    the watermark is gone. To go back to free, delete license.key next to the
    exe and in %APPDATA%\NERO Tools\GIF Converter\.
+
+What's new in 0.3.0
+-------------------
+- Record screen: tab "Record screen". Full screen, or Region (click
+  "Select region…" and drag, Esc cancels; or type x / y / w / h). Choose FPS,
+  cursor on/off and a countdown, press "Start recording". The app minimises;
+  press "Stop" in the small window bottom-right. Free: stops at 15 s.
+- Perfect social GIF: tab "Social GIF" (or "Make" after recording). Pick
+  X / Twitter, Discord, Reddit, Telegram / WeChat sticker or GitHub README;
+  the app re-encodes up to 4 times until the file is under the size limit and
+  shows the final size.
+- Languages: English, 简体中文, 繁體中文, 日本語, 한국어, Español, Português,
+  Deutsch, Français, Русский. Picked from Windows automatically; change it with
+  the "Language" box top-right (remembered).
+- Screen recording records the primary monitor / the area you select. If the
+  region is partly outside the screen, ffmpeg refuses it — select again.
 
 Free web tool (no watermark, shorter clips)
 -------------------------------------------
